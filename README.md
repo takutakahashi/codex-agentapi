@@ -255,6 +255,37 @@ codex-agentapi/
 | Provider | AWS Bedrock / Anthropic API | OpenAI Codex |
 | Runtime | Node.js/Bun | Bun (recommended) |
 
+## Publishing
+
+This package is automatically published to npm when a new release is created on GitHub.
+
+### Steps to publish a new version:
+
+1. **Create and push a tag:**
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+
+2. **Create a GitHub Release:**
+   ```bash
+   gh release create v1.0.0 --title "v1.0.0" --notes "Release notes here"
+   ```
+
+3. **Automated workflow:**
+   - GitHub Actions will automatically:
+     - Update `package.json` version
+     - Run tests and build
+     - Publish to npm
+     - Update release notes
+
+### Manual publish (if needed):
+
+```bash
+npm login
+npm publish --access public
+```
+
 ## License
 
 MIT
