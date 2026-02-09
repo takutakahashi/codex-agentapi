@@ -1,0 +1,69 @@
+/**
+ * Message sending endpoint
+ */
+
+import { Router } from 'express';
+import type { AgentService } from '../services/agent.js';
+import type { SessionService } from '../services/session.js';
+import type { SSEService } from '../services/sse.js';
+import { postMessageSchema } from '../utils/validation.js';
+import { logger } from '../utils/logger.js';
+
+export function createMessageRouter(
+  agentService: AgentService,
+  sessionService: SessionService,
+  sseService: SSEService
+): Router {
+  const router = Router();
+
+  router.post('/message', async (req, res) => {
+    // Validate request body
+    const result = postMessageSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({
+        type: 'about:blank',
+        title: 'Invalid request',
+        status: 400,
+        detail: result.error.message,
+      });
+    }
+
+    const { content } = result.data;
+
+    // Check if agent is busy
+    const status = agentService.getStatus();
+    if (status.status === 'running') {
+      return res.status(503).json({
+        type: 'about:blank',
+        title: 'Agent is busy',
+        status: 503,
+        detail: 'The agent is currently processing another request',
+      });
+    }
+
+    // Add user message to session
+    sessionService.addMessage({
+      role: 'user',
+      content,
+    });
+
+    // Broadcast user message via SSE
+    sseService.broadcast({
+      type: 'message',
+      data: { role: 'user', content },
+    });
+
+    // Send to agent asynchronously
+    agentService.sendMessage(content).catch((error) => {
+      logger.error('Error processing message:', error);
+      sseService.broadcast({
+        type: 'error',
+        data: { message: error instanceof Error ? error.message : String(error) },
+      });
+    });
+
+    return res.json({ ok: true });
+  });
+
+  return router;
+}
