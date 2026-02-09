@@ -1,0 +1,735 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Claude AgentAPI",
+    "description": "coder/agentapi compatible HTTP API server using Claude Agent SDK on AWS Bedrock",
+    "version": "1.0.0",
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:9000",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "description": "Returns the health status of the server",
+        "responses": {
+          "200": {
+            "description": "Server is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "summary": "Get agent status",
+        "description": "Returns the current status of the Claude agent",
+        "responses": {
+          "200": {
+            "description": "Agent status retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/messages": {
+      "get": {
+        "summary": "Get conversation messages",
+        "description": "Returns only user and assistant messages (pure conversation without tool execution information). Supports pagination via query parameters.",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of messages to retrieve",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "description": "Direction for limit-based pagination. 'head' returns first n messages, 'tail' returns last n messages (most recent)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["head", "tail"],
+              "default": "tail"
+            }
+          },
+          {
+            "name": "around",
+            "in": "query",
+            "description": "Message ID to center around. Returns messages before and after this ID. Cannot be used with 'limit' or 'direction'.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "context",
+            "in": "query",
+            "description": "Number of messages to return before and after the 'around' message. Requires 'around' parameter.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 10
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "description": "Cursor-based pagination: Get messages after this message ID. Returns messages with ID > after. Cannot be used with 'before', 'around', 'context', or 'direction'.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "description": "Cursor-based pagination: Get messages before this message ID. Returns messages with ID < before. Cannot be used with 'after', 'around', 'context', or 'direction'.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Messages retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessagesResponseBody"
+                },
+                "examples": {
+                  "all_messages": {
+                    "summary": "Get all messages",
+                    "value": {
+                      "$schema": "https://10.42.2.198:9000/schemas/MessagesResponseBody.json",
+                      "messages": [
+                        {
+                          "id": 0,
+                          "role": "user",
+                          "content": "Hello",
+                          "time": "2024-01-01T00:00:00.000Z",
+                          "type": "normal"
+                        }
+                      ],
+                      "total": 100,
+                      "hasMore": false
+                    }
+                  },
+                  "last_10": {
+                    "summary": "Get last 10 messages (most recent)",
+                    "value": {
+                      "$schema": "https://10.42.2.198:9000/schemas/MessagesResponseBody.json",
+                      "messages": [],
+                      "total": 100,
+                      "hasMore": true
+                    }
+                  },
+                  "around_message": {
+                    "summary": "Get messages around ID 42",
+                    "value": {
+                      "$schema": "https://10.42.2.198:9000/schemas/MessagesResponseBody.json",
+                      "messages": [],
+                      "total": 100,
+                      "hasMore": true
+                    }
+                  },
+                  "after_cursor": {
+                    "summary": "Get messages after ID 100 (cursor-based pagination)",
+                    "value": {
+                      "$schema": "https://10.42.2.198:9000/schemas/MessagesResponseBody.json",
+                      "messages": [],
+                      "total": 100,
+                      "hasMore": true
+                    }
+                  },
+                  "before_cursor": {
+                    "summary": "Get messages before ID 50 (cursor-based pagination)",
+                    "value": {
+                      "$schema": "https://10.42.2.198:9000/schemas/MessagesResponseBody.json",
+                      "messages": [],
+                      "total": 100,
+                      "hasMore": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemJson"
+                },
+                "examples": {
+                  "invalid_limit": {
+                    "summary": "Invalid limit parameter",
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Invalid query parameters",
+                      "status": 400,
+                      "detail": "limit: Expected number, received nan"
+                    }
+                  },
+                  "context_without_around": {
+                    "summary": "Context requires around",
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Invalid query parameters",
+                      "status": 400,
+                      "detail": "Parameter \"context\" requires \"around\" to be specified"
+                    }
+                  },
+                  "around_with_limit": {
+                    "summary": "Around cannot be used with limit",
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Invalid query parameters",
+                      "status": 400,
+                      "detail": "Parameter \"around\" cannot be used with \"limit\" or \"direction\""
+                    }
+                  },
+                  "after_with_before": {
+                    "summary": "After and before are mutually exclusive",
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Invalid query parameters",
+                      "status": 400,
+                      "detail": "Parameters \"after\" and \"before\" cannot be used together"
+                    }
+                  },
+                  "after_with_around": {
+                    "summary": "After cannot be used with around-based pagination",
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Invalid query parameters",
+                      "status": 400,
+                      "detail": "Parameter \"after\" cannot be used with \"around\", \"context\", or \"direction\""
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/message": {
+      "post": {
+        "summary": "Send a message to the agent",
+        "description": "Sends a message to the Claude agent",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PostMessageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostMessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemJson"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Agent is busy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemJson"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tool_status": {
+      "get": {
+        "summary": "Get active tool execution status",
+        "description": "Returns information about currently active tool executions. When a tool starts executing, it appears in this list. When the tool completes (success or error), it is removed from the list.",
+        "responses": {
+          "200": {
+            "description": "Active tool execution status retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolStatusResponseBody"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/events": {
+      "get": {
+        "summary": "Server-Sent Events endpoint",
+        "description": "Subscribe to real-time updates via Server-Sent Events",
+        "responses": {
+          "200": {
+            "description": "SSE connection established",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/action": {
+      "get": {
+        "summary": "Get pending actions",
+        "description": "Returns a list of pending actions that require user response, including their content (questions, plans, etc.)",
+        "responses": {
+          "200": {
+            "description": "Pending actions retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetActionResponse"
+                },
+                "examples": {
+                  "no_actions": {
+                    "summary": "No pending actions",
+                    "value": {
+                      "pending_actions": []
+                    }
+                  },
+                  "with_question": {
+                    "summary": "Pending question",
+                    "value": {
+                      "pending_actions": [
+                        {
+                          "type": "answer_question",
+                          "tool_use_id": "toolu_123",
+                          "content": {
+                            "questions": [
+                              {
+                                "question": "Which library should we use?",
+                                "header": "Library",
+                                "multiSelect": false,
+                                "options": [
+                                  {
+                                    "label": "React",
+                                    "description": "UI library"
+                                  },
+                                  {
+                                    "label": "Vue",
+                                    "description": "Progressive framework"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "with_plan": {
+                    "summary": "Pending plan",
+                    "value": {
+                      "pending_actions": [
+                        {
+                          "type": "approve_plan",
+                          "tool_use_id": "toolu_456",
+                          "content": {
+                            "plan": "Implementation plan details..."
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Send an action to the agent",
+        "description": "Sends an action to the Claude agent. Supports multiple action types: answer_question (for AskUserQuestion), approve_plan (for ExitPlanMode), and stop_agent.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/AnswerQuestionAction"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ApprovePlanAction"
+                  },
+                  {
+                    "$ref": "#/components/schemas/StopAgentAction"
+                  }
+                ],
+                "discriminator": {
+                  "propertyName": "type"
+                }
+              },
+              "examples": {
+                "answer_question": {
+                  "summary": "Answer a question",
+                  "value": {
+                    "type": "answer_question",
+                    "answers": {
+                      "question1": "answer1",
+                      "question2": "answer2"
+                    }
+                  }
+                },
+                "approve_plan": {
+                  "summary": "Approve a plan",
+                  "value": {
+                    "type": "approve_plan",
+                    "approved": true
+                  }
+                },
+                "stop_agent": {
+                  "summary": "Stop the agent",
+                  "value": {
+                    "type": "stop_agent"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Action sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostActionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemJson"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No active question or plan to respond to",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemJson"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Message": {
+        "type": "object",
+        "required": ["id", "role", "content", "time"],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Unique message ID"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["user", "assistant", "agent", "tool_result"],
+            "description": "Message role"
+          },
+          "content": {
+            "type": "string",
+            "description": "Message content"
+          },
+          "time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["normal", "question", "plan"],
+            "description": "Message type (optional)"
+          },
+          "toolUseId": {
+            "type": "string",
+            "description": "ID of tool_use (for 'agent' role messages)"
+          },
+          "parentToolUseId": {
+            "type": "string",
+            "description": "ID of parent tool_use (for 'tool_result' role messages)"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["success", "error"],
+            "description": "Execution status (for 'tool_result' role messages)"
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message (for 'tool_result' role messages with status='error')"
+          }
+        }
+      },
+      "MessagesResponseBody": {
+        "type": "object",
+        "required": ["messages"],
+        "properties": {
+          "$schema": {
+            "type": "string",
+            "description": "JSON Schema URI (optional)"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Message"
+            },
+            "description": "Array of user and assistant messages only"
+          },
+          "total": {
+            "type": "integer",
+            "description": "Total number of messages available in the conversation"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "description": "Whether there are more messages beyond the returned set"
+          }
+        }
+      },
+      "ToolStatusResponseBody": {
+        "type": "object",
+        "required": ["messages"],
+        "properties": {
+          "$schema": {
+            "type": "string",
+            "description": "JSON Schema URI (optional)"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Message"
+            },
+            "description": "Array of currently active tool execution messages (agent role only, removed when tool completes)"
+          }
+        }
+      },
+      "PostMessageRequest": {
+        "type": "object",
+        "required": ["content", "type"],
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "Message content"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["user", "raw"],
+            "description": "Message type"
+          }
+        }
+      },
+      "PostMessageResponse": {
+        "type": "object",
+        "required": ["ok"],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "description": "Whether the message was sent successfully"
+          }
+        }
+      },
+      "StatusResponse": {
+        "type": "object",
+        "required": ["agent_type", "status"],
+        "properties": {
+          "agent_type": {
+            "type": "string",
+            "description": "Type of the agent"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["running", "stable"],
+            "description": "Current agent status"
+          }
+        }
+      },
+      "ProblemJson": {
+        "type": "object",
+        "required": ["type", "title", "status"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "A URI reference that identifies the problem type"
+          },
+          "title": {
+            "type": "string",
+            "description": "A short, human-readable summary of the problem"
+          },
+          "status": {
+            "type": "integer",
+            "description": "The HTTP status code"
+          },
+          "detail": {
+            "type": "string",
+            "description": "A human-readable explanation specific to this occurrence"
+          },
+          "instance": {
+            "type": "string",
+            "description": "A URI reference that identifies the specific occurrence"
+          }
+        }
+      },
+      "AnswerQuestionAction": {
+        "type": "object",
+        "required": ["type", "answers"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["answer_question"],
+            "description": "Action type to answer a question from AskUserQuestion"
+          },
+          "answers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Map of question IDs to answers"
+          }
+        }
+      },
+      "ApprovePlanAction": {
+        "type": "object",
+        "required": ["type", "approved"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["approve_plan"],
+            "description": "Action type to approve or reject a plan from ExitPlanMode"
+          },
+          "approved": {
+            "type": "boolean",
+            "description": "Whether the plan is approved (true) or rejected (false)"
+          }
+        }
+      },
+      "StopAgentAction": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["stop_agent"],
+            "description": "Action type to stop the running agent"
+          }
+        }
+      },
+      "PostActionResponse": {
+        "type": "object",
+        "required": ["ok"],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "description": "Whether the action was processed successfully"
+          }
+        }
+      },
+      "PendingAction": {
+        "type": "object",
+        "required": ["type", "tool_use_id", "content"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of pending action (answer_question or approve_plan)"
+          },
+          "tool_use_id": {
+            "type": "string",
+            "description": "Tool use ID for this pending action"
+          },
+          "content": {
+            "description": "Content of the pending action (question details, plan details, etc.)"
+          }
+        }
+      },
+      "GetActionResponse": {
+        "type": "object",
+        "required": ["pending_actions"],
+        "properties": {
+          "pending_actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PendingAction"
+            },
+            "description": "Array of pending actions that require user response"
+          }
+        }
+      }
+    }
+  }
+}
