@@ -18,20 +18,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: bun install
 
       - name: Run type check
-        run: npm run type-check
+        run: bun run type-check
 
       - name: Run tests
-        run: npm test -- --reporter=verbose
+        run: bun run test -- --reporter=verbose
         env:
           CI: true
 
@@ -45,10 +49,10 @@ jobs:
             **/*.log
 
       - name: Run linter
-        run: npm run lint
+        run: bun run lint
 
       - name: Build project
-        run: npm run build
+        run: bun run build
 
       - name: Check build output
         run: |
