@@ -39,6 +39,45 @@ export function loadClaudeConfig(configPath?: string): ClaudeConfig {
 }
 
 /**
+ * Initialize ~/.codex/config.toml to read OPENAI_API_KEY from environment.
+ * The codex binary does not read OPENAI_API_KEY automatically; a custom
+ * model provider with env_key must be declared in config.toml.
+ */
+export function initCodexConfig(): void {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    logger.warn('OPENAI_API_KEY is not set; codex will not be able to authenticate');
+    return;
+  }
+
+  const codexDir = path.join(homedir(), '.codex');
+  const configPath = path.join(codexDir, 'config.toml');
+
+  if (fs.existsSync(configPath)) {
+    return;
+  }
+
+  const toml = [
+    'model_provider = "openai-api"',
+    '',
+    '[model_providers.openai-api]',
+    'name = "OpenAI (API key from env)"',
+    'base_url = "https://api.openai.com/v1"',
+    'wire_api = "responses"',
+    'env_key = "OPENAI_API_KEY"',
+    'requires_openai_auth = false',
+  ].join('\n') + '\n';
+
+  try {
+    fs.mkdirSync(codexDir, { recursive: true });
+    fs.writeFileSync(configPath, toml, 'utf-8');
+    logger.info(`Created codex config at: ${configPath}`);
+  } catch (error) {
+    logger.warn('Failed to create codex config.toml:', error);
+  }
+}
+
+/**
  * Load application configuration
  */
 export function loadConfig(): Config {

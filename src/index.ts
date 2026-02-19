@@ -2,12 +2,13 @@
  * Main entry point
  */
 
-import { loadConfig } from './utils/config.js';
+import { loadConfig, initCodexConfig } from './utils/config.js';
 import { createServer } from './server.js';
 import { logger } from './utils/logger.js';
 
 async function main() {
   try {
+    initCodexConfig();
     const config = loadConfig();
     const app = createServer(config);
 
