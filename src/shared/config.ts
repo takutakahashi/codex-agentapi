@@ -13,10 +13,17 @@ dotenv.config();
 
 /**
  * Load Claude config from .claude/config.json
+ *
+ * Search order:
+ * 1. Explicit configPath argument
+ * 2. CLAUDE_CONFIG_PATH environment variable
+ * 3. <cwd>/.claude/config.json
+ * 4. ~/.claude/config.json
  */
 export function loadClaudeConfig(configPath?: string): ClaudeConfig {
   const paths = [
     configPath,
+    process.env.CLAUDE_CONFIG_PATH,
     path.join(process.cwd(), '.claude', 'config.json'),
     path.join(homedir(), '.claude', 'config.json'),
   ].filter(Boolean) as string[];

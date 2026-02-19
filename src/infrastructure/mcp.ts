@@ -26,25 +26,37 @@ export class MCPService {
   }
 
   /**
-   * Prepare MCP environment for Codex CLI
+   * Prepare MCP environment for Codex CLI.
    *
-   * Note: @openai/codex-sdk wraps the Codex CLI binary.
-   * MCP servers need to be configured in the Codex CLI configuration.
-   * This method prepares the configuration that can be passed to Codex constructor.
+   * Converts .claude/config.json mcpServers format to Codex CLI --config overrides.
+   * The Codex CLI expects mcp_servers.<name>.command, mcp_servers.<name>.args, etc.
+   *
+   * @returns A CodexConfigObject to be merged into the Codex config option.
    */
   prepareMCPEnvironment(config: MCPConfig): Record<string, unknown> {
     if (!config.mcpServers || Object.keys(config.mcpServers).length === 0) {
       return {};
     }
 
-    // Convert .claude/config.json MCP format to Codex config format
-    // This is a placeholder - actual implementation depends on Codex CLI config format
-    const codexConfig: Record<string, unknown> = {};
+    const mcpServers: Record<string, unknown> = {};
 
-    // Codex CLI might support MCP servers through config
-    // For now, we log the configuration
-    logger.info('MCP servers configured:', Object.keys(config.mcpServers));
+    for (const [name, serverConfig] of Object.entries(config.mcpServers)) {
+      const entry: Record<string, unknown> = {
+        command: serverConfig.command,
+      };
 
-    return codexConfig;
+      if (serverConfig.args && serverConfig.args.length > 0) {
+        entry.args = serverConfig.args;
+      }
+
+      if (serverConfig.env && Object.keys(serverConfig.env).length > 0) {
+        entry.env = serverConfig.env;
+      }
+
+      mcpServers[name] = entry;
+      logger.info(`Configured MCP server: ${name}`);
+    }
+
+    return { mcp_servers: mcpServers };
   }
 }
