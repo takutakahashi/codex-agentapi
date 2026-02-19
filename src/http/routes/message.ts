@@ -3,11 +3,11 @@
  */
 
 import { Router } from 'express';
-import type { AgentService } from '../services/agent.js';
-import type { SessionService } from '../services/session.js';
-import type { SSEService } from '../services/sse.js';
-import { postMessageSchema } from '../utils/validation.js';
-import { logger } from '../utils/logger.js';
+import type { AgentService } from '../../application/agent.js';
+import type { SessionService } from '../../application/session.js';
+import type { SSEService } from '../../application/sse.js';
+import { postMessageSchema } from '../validation.js';
+import { logger } from '../../shared/logger.js';
 
 export function createMessageRouter(
   agentService: AgentService,

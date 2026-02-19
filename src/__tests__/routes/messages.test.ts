@@ -5,8 +5,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import express from 'express';
 import request from 'supertest';
-import { SessionService } from '../../services/session.js';
-import { createMessagesRouter } from '../../routes/messages.js';
+import { SessionService } from '../../application/session.js';
+import { createMessagesRouter } from '../../http/routes/messages.js';
 
 describe('GET /messages', () => {
   let app: express.Application;
@@ -24,14 +24,18 @@ describe('GET /messages', () => {
         content: `Message ${i}`,
       });
     }
+    sessionService.addMessage({
+      role: 'tool_result',
+      content: 'Command ls completed',
+    });
   });
 
   it('should return all messages', async () => {
     const res = await request(app).get('/messages');
 
     expect(res.status).toBe(200);
-    expect(res.body.messages).toHaveLength(5);
-    expect(res.body.total).toBe(5);
+    expect(res.body.messages).toHaveLength(6);
+    expect(res.body.total).toBe(6);
   });
 
   it('should handle limit parameter', async () => {

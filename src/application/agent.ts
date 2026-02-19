@@ -5,7 +5,7 @@
 import { Codex, Thread, ThreadEvent, ThreadItem } from '@openai/codex-sdk';
 import type { AgentConfig } from '../types/config.js';
 import type { AgentStatus } from '../types/agent.js';
-import { logger } from '../utils/logger.js';
+import { logger } from '../shared/logger.js';
 import type { SessionService } from './session.js';
 import type { SSEService } from './sse.js';
 

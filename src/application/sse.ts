@@ -4,7 +4,7 @@
 
 import type { Response } from 'express';
 import type { SSEEvent } from '../types/events.js';
-import { logger } from '../utils/logger.js';
+import { logger } from '../shared/logger.js';
 
 interface SSEClient {
   id: string;

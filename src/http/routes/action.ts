@@ -3,9 +3,9 @@
  */
 
 import { Router } from 'express';
-import type { AgentService } from '../services/agent.js';
-import { actionSchema } from '../utils/validation.js';
-import { logger } from '../utils/logger.js';
+import type { AgentService } from '../../application/agent.js';
+import { actionSchema } from '../validation.js';
+import { logger } from '../../shared/logger.js';
 
 export function createActionRouter(agentService: AgentService): Router {
   const router = Router();

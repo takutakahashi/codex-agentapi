@@ -4,7 +4,7 @@
 
 import type { Message, MessagesResponseBody, PaginationParams } from '../types/api.js';
 import type { ActiveTool } from '../types/agent.js';
-import { logger } from '../utils/logger.js';
+import { logger } from '../shared/logger.js';
 
 export class SessionService {
   private messages: Message[] = [];
@@ -31,9 +31,6 @@ export class SessionService {
   getMessages(params: PaginationParams): MessagesResponseBody {
     const total = this.messages.length;
     let filtered = [...this.messages];
-
-    // Filter to only user and assistant messages
-    filtered = filtered.filter(m => m.role === 'user' || m.role === 'assistant');
 
     // Apply pagination
     if (params.around !== undefined) {

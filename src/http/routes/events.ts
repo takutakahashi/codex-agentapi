@@ -4,7 +4,7 @@
 
 import { Router } from 'express';
 import { randomUUID } from 'crypto';
-import type { SSEService } from '../services/sse.js';
+import type { SSEService } from '../../application/sse.js';
 
 export function createEventsRouter(sseService: SSEService): Router {
   const router = Router();

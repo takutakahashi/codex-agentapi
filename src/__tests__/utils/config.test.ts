@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { loadConfig } from '../../utils/config.js';
+import { loadConfig } from '../../shared/config.js';
 
 describe('loadConfig', () => {
   it('should load configuration with defaults', () => {

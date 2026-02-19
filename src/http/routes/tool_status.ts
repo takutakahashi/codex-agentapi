@@ -3,7 +3,7 @@
  */
 
 import { Router } from 'express';
-import type { SessionService } from '../services/session.js';
+import type { SessionService } from '../../application/session.js';
 
 export function createToolStatusRouter(sessionService: SessionService): Router {
   const router = Router();

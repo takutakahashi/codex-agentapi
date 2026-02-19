@@ -3,7 +3,7 @@
  */
 
 import { Router } from 'express';
-import type { AgentService } from '../services/agent.js';
+import type { AgentService } from '../../application/agent.js';
 
 export function createStatusRouter(agentService: AgentService): Router {
   const router = Router();

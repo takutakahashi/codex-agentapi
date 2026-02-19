@@ -3,21 +3,21 @@
  */
 
 import express from 'express';
-import type { Config } from './types/config.js';
-import { AgentService } from './services/agent.js';
-import { SessionService } from './services/session.js';
-import { SSEService } from './services/sse.js';
-import { MCPService } from './services/mcp.js';
-import { SkillService } from './services/skill.js';
-import healthRouter from './routes/health.js';
-import { createStatusRouter } from './routes/status.js';
-import { createMessageRouter } from './routes/message.js';
-import { createMessagesRouter } from './routes/messages.js';
-import { createToolStatusRouter } from './routes/tool_status.js';
-import { createEventsRouter } from './routes/events.js';
-import { createActionRouter } from './routes/action.js';
-import { logger } from './utils/logger.js';
-import path from 'path';
+import type { Config } from '../types/config.js';
+import { AgentService } from '../application/agent.js';
+import { SessionService } from '../application/session.js';
+import { SSEService } from '../application/sse.js';
+import { MCPService } from '../infrastructure/mcp.js';
+import { SkillService } from '../infrastructure/skill.js';
+import { buildCodexConfig } from '../infrastructure/codex_config.js';
+import healthRouter from '../http/routes/health.js';
+import { createStatusRouter } from '../http/routes/status.js';
+import { createMessageRouter } from '../http/routes/message.js';
+import { createMessagesRouter } from '../http/routes/messages.js';
+import { createToolStatusRouter } from '../http/routes/tool_status.js';
+import { createEventsRouter } from '../http/routes/events.js';
+import { createActionRouter } from '../http/routes/action.js';
+import { logger } from '../shared/logger.js';
 
 export function createServer(config: Config) {
   const app = express();
@@ -40,19 +40,12 @@ export function createServer(config: Config) {
   const mcpService = new MCPService();
   const skillService = new SkillService();
 
-  const configPath = path.join(process.cwd(), '.claude', 'config.json');
-  const mcpConfig = mcpService.loadMCPConfig(configPath);
-  const skillConfig = skillService.loadSkillConfig(configPath);
-
-  // Prepare Codex configuration
-  const mcpEnv = mcpService.prepareMCPEnvironment(mcpConfig);
-  const skillEnv = skillService.prepareSkillEnvironment(skillConfig);
-
-  const codexConfig = {
-    ...config.agent.codexConfig,
-    ...mcpEnv,
-    ...skillEnv,
-  };
+  const codexConfig = buildCodexConfig(
+    config.agent.codexConfig,
+    config.claude,
+    mcpService,
+    skillService
+  );
 
   const agentService = new AgentService(
     {

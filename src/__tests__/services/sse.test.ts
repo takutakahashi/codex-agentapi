@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { SSEService } from '../../services/sse.js';
+import { SSEService } from '../../application/sse.js';
 import type { Response } from 'express';
 
 describe('SSEService', () => {

@@ -115,30 +115,35 @@ const codex = new Codex({
 codex-agentapi/
 ├── src/
 │   ├── index.ts                 # エントリーポイント
-│   ├── server.ts                # Expressサーバーセットアップ
-│   ├── routes/                  # API ルート
-│   │   ├── health.ts            # GET /health
-│   │   ├── status.ts            # GET /status
-│   │   ├── messages.ts          # GET /messages
-│   │   ├── message.ts           # POST /message
-│   │   ├── tool_status.ts       # GET /tool_status
-│   │   ├── action.ts            # GET/POST /action
-│   │   └── events.ts            # GET /events (SSE)
-│   ├── services/                # ビジネスロジック
+│   ├── app/                     # アプリ層 (起動/サーバー構成)
+│   │   ├── main.ts              # 起動処理
+│   │   └── server.ts            # Expressサーバーセットアップ
+│   ├── http/                    # HTTP 層
+│   │   ├── routes/              # API ルート
+│   │   │   ├── health.ts        # GET /health
+│   │   │   ├── status.ts        # GET /status
+│   │   │   ├── messages.ts      # GET /messages
+│   │   │   ├── message.ts       # POST /message
+│   │   │   ├── tool_status.ts   # GET /tool_status
+│   │   │   ├── action.ts        # GET/POST /action
+│   │   │   └── events.ts        # GET /events (SSE)
+│   │   └── validation.ts        # Zod スキーマ
+│   ├── application/             # アプリケーション層
 │   │   ├── agent.ts             # Codex エージェント管理
 │   │   ├── session.ts           # セッション・メッセージ管理
+│   │   └── sse.ts               # SSE イベント管理
+│   ├── infrastructure/          # インフラ層
 │   │   ├── mcp.ts               # MCP server loader
 │   │   ├── skill.ts             # Skill loader
-│   │   └── sse.ts               # SSE イベント管理
+│   │   └── codex_config.ts      # Codex config 組み立て
+│   ├── shared/                  # 共通部品
+│   │   ├── config.ts            # 設定読み込み
+│   │   └── logger.ts            # ロガー
 │   ├── types/                   # 型定義
 │   │   ├── api.ts               # OpenAPI スキーマ対応型
 │   │   ├── config.ts            # 設定型
 │   │   ├── agent.ts             # Agent関連型
 │   │   └── events.ts            # イベント型
-│   ├── utils/                   # ユーティリティ
-│   │   ├── config.ts            # 設定読み込み
-│   │   ├── logger.ts            # ロガー
-│   │   └── validation.ts        # Zod スキーマ
 │   └── __tests__/               # テスト
 │       ├── routes/
 │       ├── services/
@@ -694,7 +699,7 @@ describe('POST /message', () => {
   ],
   "scripts": {
     "dev": "bun run src/index.ts",
-    "build": "bun build src/index.ts --outdir=dist --target=node",
+    "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

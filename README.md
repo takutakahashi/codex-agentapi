@@ -115,7 +115,7 @@ Sends a message to the agent. Returns immediately while processing continues asy
 GET /messages?limit=10&direction=tail
 ```
 
-Retrieves conversation messages with pagination support.
+Retrieves conversation messages with pagination support, including tool result messages.
 
 **Pagination options:**
 
@@ -234,15 +234,12 @@ bun run lint
 ```
 codex-agentapi/
 ├── src/
-│   ├── services/
-│   │   ├── agent.ts       # Codex SDK integration
-│   │   ├── session.ts     # Message management
-│   │   ├── sse.ts         # Server-Sent Events
-│   │   ├── mcp.ts         # MCP server loader
-│   │   └── skill.ts       # Skill loader
-│   ├── routes/            # API endpoints
-│   ├── types/             # TypeScript types
-│   └── utils/             # Utilities
+│   ├── app/               # App wiring (server + main)
+│   ├── http/              # HTTP layer (routes + validation)
+│   ├── application/       # Use cases / domain services
+│   ├── infrastructure/    # Adapters (MCP/skills/Codex config)
+│   ├── shared/            # Cross-cutting concerns
+│   └── types/             # TypeScript types
 └── bin/
     └── cli.js             # CLI entry point
 ```

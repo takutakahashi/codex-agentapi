@@ -3,8 +3,8 @@
  */
 
 import { Router } from 'express';
-import type { SessionService } from '../services/session.js';
-import { paginationSchema } from '../utils/validation.js';
+import type { SessionService } from '../../application/session.js';
+import { paginationSchema } from '../validation.js';
 
 export function createMessagesRouter(sessionService: SessionService): Router {
   const router = Router();

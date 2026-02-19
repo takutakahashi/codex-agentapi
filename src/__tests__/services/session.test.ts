@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { SessionService } from '../../services/session.js';
+import { SessionService } from '../../application/session.js';
 
 describe('SessionService', () => {
   let service: SessionService;
@@ -44,6 +44,15 @@ describe('SessionService', () => {
 
       expect(result.messages.length).toBe(10);
       expect(result.total).toBe(10);
+    });
+
+    it('should include tool result messages', () => {
+      service.addMessage({ role: 'tool_result', content: 'Command ls completed' });
+
+      const result = service.getMessages({});
+
+      expect(result.messages.length).toBe(11);
+      expect(result.messages.some(m => m.role === 'tool_result')).toBe(true);
     });
 
     it('should handle limit with tail direction', () => {
