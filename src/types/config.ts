@@ -12,11 +12,27 @@ export interface MCPConfig {
   mcpServers?: Record<string, MCPServerConfig>;
 }
 
+/**
+ * Plugin entry in .claude/config.json
+ * Each plugin may reference skills via SKILL.md files under its install path.
+ */
+export interface PluginEntry {
+  enabled: boolean;
+  config?: Record<string, unknown>;
+  /** Install path for this plugin (e.g. ~/.claude/plugins/cache/<marketplace>/<name>/<version>) */
+  installPath?: string;
+}
+
 export interface SkillConfig {
-  plugins?: Record<string, {
-    enabled: boolean;
-    config?: Record<string, unknown>;
-  }>;
+  plugins?: Record<string, PluginEntry>;
+}
+
+/**
+ * Codex CLI skill config entry (maps to skills.config[] in config.toml)
+ */
+export interface CodexSkillEntry {
+  path: string;
+  enabled: boolean;
 }
 
 export interface ClaudeConfig extends MCPConfig, SkillConfig {}
