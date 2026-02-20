@@ -43,6 +43,10 @@ export interface AgentConfig {
   env?: Record<string, string>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   codexConfig?: any;
+  /** Codex sandbox mode: 'read-only' | 'workspace-write' | 'danger-full-access' */
+  sandboxMode?: string;
+  /** Codex approval policy: e.g. 'never' | 'on-request' | 'on-failure' */
+  approvalPolicy?: string;
 }
 
 export interface ServerConfig {

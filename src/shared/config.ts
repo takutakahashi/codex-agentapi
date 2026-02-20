@@ -95,6 +95,8 @@ export function loadConfig(): Config {
       apiKey: process.env.OPENAI_API_KEY,
       workingDirectory: process.env.WORKING_DIRECTORY || process.cwd(),
       env: process.env as Record<string, string>,
+      sandboxMode: process.env.CODEX_SANDBOX_MODE,
+      approvalPolicy: process.env.CODEX_APPROVAL_POLICY,
     },
     server: {
       port: parseInt(process.env.PORT || '9000', 10),

@@ -20,4 +20,29 @@ describe('loadConfig', () => {
 
     expect(config.server.port).toBe(8080);
   });
+
+  it('should read CODEX_SANDBOX_MODE from environment', () => {
+    process.env.CODEX_SANDBOX_MODE = 'danger-full-access';
+    const config = loadConfig();
+
+    expect(config.agent.sandboxMode).toBe('danger-full-access');
+    delete process.env.CODEX_SANDBOX_MODE;
+  });
+
+  it('should read CODEX_APPROVAL_POLICY from environment', () => {
+    process.env.CODEX_APPROVAL_POLICY = 'never';
+    const config = loadConfig();
+
+    expect(config.agent.approvalPolicy).toBe('never');
+    delete process.env.CODEX_APPROVAL_POLICY;
+  });
+
+  it('should leave sandboxMode and approvalPolicy undefined when env vars are not set', () => {
+    delete process.env.CODEX_SANDBOX_MODE;
+    delete process.env.CODEX_APPROVAL_POLICY;
+    const config = loadConfig();
+
+    expect(config.agent.sandboxMode).toBeUndefined();
+    expect(config.agent.approvalPolicy).toBeUndefined();
+  });
 });
