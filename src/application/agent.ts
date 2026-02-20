@@ -15,6 +15,7 @@ export class AgentService {
   private status: AgentStatus = { status: 'stable' };
   private sessionService: SessionService;
   private sseService: SSEService;
+  private agentConfig: AgentConfig;
 
   constructor(
     config: AgentConfig,
@@ -23,6 +24,7 @@ export class AgentService {
   ) {
     this.sessionService = sessionService;
     this.sseService = sseService;
+    this.agentConfig = config;
 
     // Initialize Codex SDK
     this.codex = new Codex({
@@ -40,6 +42,8 @@ export class AgentService {
     this.thread = this.codex.startThread({
       workingDirectory: workingDirectory || process.cwd(),
       skipGitRepoCheck: true,
+      sandboxMode: this.agentConfig.sandboxMode,
+      approvalPolicy: this.agentConfig.approvalPolicy,
     });
 
     // Wait for thread.started event to get thread ID
@@ -264,7 +268,10 @@ export class AgentService {
    * Resume an existing thread
    */
   resumeThread(threadId: string): void {
-    this.thread = this.codex.resumeThread(threadId);
+    this.thread = this.codex.resumeThread(threadId, {
+      sandboxMode: this.agentConfig.sandboxMode,
+      approvalPolicy: this.agentConfig.approvalPolicy,
+    });
     this.status = { status: 'stable', threadId };
     logger.info(`Resumed thread: ${threadId}`);
   }
