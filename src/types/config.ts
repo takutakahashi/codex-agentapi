@@ -2,6 +2,8 @@
  * Configuration types
  */
 
+import type { SandboxMode, ApprovalMode } from '@openai/codex-sdk';
+
 export interface MCPServerConfig {
   command: string;
   args?: string[];
@@ -44,9 +46,9 @@ export interface AgentConfig {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   codexConfig?: any;
   /** Codex sandbox mode: 'read-only' | 'workspace-write' | 'danger-full-access' */
-  sandboxMode?: string;
-  /** Codex approval policy: e.g. 'never' | 'on-request' | 'on-failure' */
-  approvalPolicy?: string;
+  sandboxMode?: SandboxMode;
+  /** Codex approval policy: 'never' | 'on-request' | 'on-failure' | 'untrusted' */
+  approvalPolicy?: ApprovalMode;
 }
 
 export interface ServerConfig {

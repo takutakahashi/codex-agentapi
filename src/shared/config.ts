@@ -7,6 +7,7 @@ import path from 'path';
 import { homedir } from 'os';
 import dotenv from 'dotenv';
 import type { Config, ClaudeConfig } from '../types/config.js';
+import type { SandboxMode, ApprovalMode } from '@openai/codex-sdk';
 import { logger } from './logger.js';
 
 dotenv.config();
@@ -95,8 +96,8 @@ export function loadConfig(): Config {
       apiKey: process.env.OPENAI_API_KEY,
       workingDirectory: process.env.WORKING_DIRECTORY || process.cwd(),
       env: process.env as Record<string, string>,
-      sandboxMode: process.env.CODEX_SANDBOX_MODE,
-      approvalPolicy: process.env.CODEX_APPROVAL_POLICY,
+      sandboxMode: process.env.CODEX_SANDBOX_MODE as SandboxMode | undefined,
+      approvalPolicy: process.env.CODEX_APPROVAL_POLICY as ApprovalMode | undefined,
     },
     server: {
       port: parseInt(process.env.PORT || '9000', 10),
