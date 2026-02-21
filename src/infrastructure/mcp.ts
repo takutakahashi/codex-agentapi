@@ -31,6 +31,9 @@ export class MCPService {
    * Converts .claude/config.json mcpServers format to Codex CLI --config overrides.
    * The Codex CLI expects mcp_servers.<name>.command, mcp_servers.<name>.args, etc.
    *
+   * stdio型: command, args, env を使用
+   * HTTP型:  type, url, headers を使用 (type が "http" または url が存在する場合)
+   *
    * @returns A CodexConfigObject to be merged into the Codex config option.
    */
   prepareMCPEnvironment(config: MCPConfig): Record<string, unknown> {
@@ -41,20 +44,42 @@ export class MCPService {
     const mcpServers: Record<string, unknown> = {};
 
     for (const [name, serverConfig] of Object.entries(config.mcpServers)) {
-      const entry: Record<string, unknown> = {
-        command: serverConfig.command,
-      };
+      const isHttp = serverConfig.type === 'http' || (serverConfig.url != null && serverConfig.command == null);
 
-      if (serverConfig.args && serverConfig.args.length > 0) {
-        entry.args = serverConfig.args;
+      if (isHttp) {
+        // HTTP型 MCP サーバー
+        const entry: Record<string, unknown> = {
+          type: 'http',
+          url: serverConfig.url,
+        };
+
+        if (serverConfig.headers && Object.keys(serverConfig.headers).length > 0) {
+          entry.headers = serverConfig.headers;
+        }
+
+        if (serverConfig.env && Object.keys(serverConfig.env).length > 0) {
+          entry.env = serverConfig.env;
+        }
+
+        mcpServers[name] = entry;
+        logger.info(`Configured HTTP MCP server: ${name}`);
+      } else {
+        // stdio型 MCP サーバー
+        const entry: Record<string, unknown> = {
+          command: serverConfig.command,
+        };
+
+        if (serverConfig.args && serverConfig.args.length > 0) {
+          entry.args = serverConfig.args;
+        }
+
+        if (serverConfig.env && Object.keys(serverConfig.env).length > 0) {
+          entry.env = serverConfig.env;
+        }
+
+        mcpServers[name] = entry;
+        logger.info(`Configured stdio MCP server: ${name}`);
       }
-
-      if (serverConfig.env && Object.keys(serverConfig.env).length > 0) {
-        entry.env = serverConfig.env;
-      }
-
-      mcpServers[name] = entry;
-      logger.info(`Configured MCP server: ${name}`);
     }
 
     return { mcp_servers: mcpServers };

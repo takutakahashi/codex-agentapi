@@ -5,9 +5,16 @@
 import type { SandboxMode, ApprovalMode } from '@openai/codex-sdk';
 
 export interface MCPServerConfig {
-  command: string;
+  /** stdio型: 実行コマンド */
+  command?: string;
   args?: string[];
   env?: Record<string, string>;
+  /** HTTP型: サーバータイプ ("http" | "stdio") */
+  type?: 'http' | 'stdio';
+  /** HTTP型: エンドポイントURL */
+  url?: string;
+  /** HTTP型: リクエストヘッダー */
+  headers?: Record<string, string>;
 }
 
 export interface MCPConfig {

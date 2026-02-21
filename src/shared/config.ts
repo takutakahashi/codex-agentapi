@@ -13,13 +13,14 @@ import { logger } from './logger.js';
 dotenv.config();
 
 /**
- * Load Claude config from .claude/config.json
+ * Load Claude config from .claude/config.json or ~/.claude.json
  *
  * Search order:
  * 1. Explicit configPath argument
  * 2. CLAUDE_CONFIG_PATH environment variable
  * 3. <cwd>/.claude/config.json
  * 4. ~/.claude/config.json
+ * 5. ~/.claude.json  (Claude Code グローバル設定ファイル)
  */
 export function loadClaudeConfig(configPath?: string): ClaudeConfig {
   const paths = [
@@ -27,6 +28,8 @@ export function loadClaudeConfig(configPath?: string): ClaudeConfig {
     process.env.CLAUDE_CONFIG_PATH,
     path.join(process.cwd(), '.claude', 'config.json'),
     path.join(homedir(), '.claude', 'config.json'),
+    // Claude Code のグローバル設定ファイル (~/.claude.json) もフォールバックとして探す
+    path.join(homedir(), '.claude.json'),
   ].filter(Boolean) as string[];
 
   for (const p of paths) {
