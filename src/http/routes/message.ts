@@ -53,13 +53,9 @@ export function createMessageRouter(
       data: { role: 'user', content },
     });
 
-    // Send to agent asynchronously
+    // Send to agent asynchronously (errors are handled inside agentService)
     agentService.sendMessage(content).catch((error) => {
-      logger.error('Error processing message:', error);
-      sseService.broadcast({
-        type: 'error',
-        data: { message: error instanceof Error ? error.message : String(error) },
-      });
+      logger.error('Unexpected error processing message:', error);
     });
 
     return res.json({ ok: true });
