@@ -1,6 +1,6 @@
 {
   "name": "@takutakahashi/codex-agentapi",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "coder/agentapi compatible HTTP API server using @openai/codex-sdk",
   "type": "module",
   "main": "dist/index.js",
