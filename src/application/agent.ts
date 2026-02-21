@@ -102,7 +102,20 @@ export class AgentService {
     } catch (error) {
       this.status.status = 'stable';
       logger.error('Error processing message:', error);
-      throw error;
+      const errorContent = `Error: ${error instanceof Error ? error.message : String(error)}`;
+      this.sessionService.addMessage({
+        role: 'assistant',
+        content: errorContent,
+        status: 'error',
+      });
+      this.sseService.broadcast({
+        type: 'message',
+        data: { role: 'assistant', content: errorContent, status: 'error' },
+      });
+      this.sseService.broadcast({
+        type: 'status_change',
+        data: { status: 'stable' },
+      });
     }
   }
 
@@ -130,13 +143,20 @@ export class AgentService {
         });
         break;
 
-      case 'turn.failed':
+      case 'turn.failed': {
+        const failedContent = `Error: ${event.error ?? 'Turn failed'}`;
         logger.error('Turn failed:', event.error);
+        this.sessionService.addMessage({
+          role: 'assistant',
+          content: failedContent,
+          status: 'error',
+        });
         this.sseService.broadcast({
-          type: 'turn_failed',
-          data: { error: event.error },
+          type: 'message',
+          data: { role: 'assistant', content: failedContent, status: 'error' },
         });
         break;
+      }
 
       case 'item.started':
         this.handleItemStarted(event.item);
@@ -150,13 +170,20 @@ export class AgentService {
         this.handleItemCompleted(event.item);
         break;
 
-      case 'error':
+      case 'error': {
+        const errorContent = `Error: ${event.message ?? 'Unknown error'}`;
         logger.error('Thread error:', event.message);
+        this.sessionService.addMessage({
+          role: 'assistant',
+          content: errorContent,
+          status: 'error',
+        });
         this.sseService.broadcast({
-          type: 'error',
-          data: { message: event.message },
+          type: 'message',
+          data: { role: 'assistant', content: errorContent, status: 'error' },
         });
         break;
+      }
     }
   }
 
