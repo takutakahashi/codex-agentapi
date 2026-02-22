@@ -2,7 +2,7 @@
  * MCPService tests
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { MCPService } from '../../infrastructure/mcp.js';
 
 describe('MCPService', () => {
