@@ -8,6 +8,26 @@ import { logger } from '../shared/logger.js';
 
 export class MCPService {
   /**
+   * ヘッダ値の環境変数プレースホルダー ($VAR または ${VAR}) をプロセス環境変数で展開する
+   */
+  private resolveEnvVarsInHeaders(
+    headers: Record<string, string>
+  ): Record<string, string> {
+    const resolved: Record<string, string> = {};
+    for (const [key, value] of Object.entries(headers)) {
+      const expandedValue = value.replace(
+        /\$\{([^}]+)\}|\$([A-Za-z_][A-Za-z0-9_]*)/g,
+        (_match, braced: string | undefined, unbraced: string | undefined) => {
+          const varName = braced ?? unbraced ?? '';
+          return process.env[varName] ?? '';
+        }
+      );
+      resolved[key] = expandedValue;
+    }
+    return resolved;
+  }
+
+  /**
    * Load MCP configuration from .claude/config.json
    */
   loadMCPConfig(configPath: string): MCPConfig {
@@ -54,11 +74,14 @@ export class MCPService {
         };
 
         if (serverConfig.headers && Object.keys(serverConfig.headers).length > 0) {
-          entry.headers = serverConfig.headers;
+          entry.headers = this.resolveEnvVarsInHeaders(serverConfig.headers);
         }
 
+        // Codex CLI の streamable_http 型は env をサポートしていないため除外する
         if (serverConfig.env && Object.keys(serverConfig.env).length > 0) {
-          entry.env = serverConfig.env;
+          logger.warn(
+            `MCP server "${name}" has env configuration but env is not supported for HTTP (streamable_http) servers. The env values will be ignored. Use "headers" for authentication instead.`
+          );
         }
 
         mcpServers[name] = entry;
