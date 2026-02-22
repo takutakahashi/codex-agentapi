@@ -57,8 +57,11 @@ export class MCPService {
           entry.headers = serverConfig.headers;
         }
 
+        // Codex CLI の streamable_http 型は env をサポートしていないため除外する
         if (serverConfig.env && Object.keys(serverConfig.env).length > 0) {
-          entry.env = serverConfig.env;
+          logger.warn(
+            `MCP server "${name}" has env configuration but env is not supported for HTTP (streamable_http) servers. The env values will be ignored. Use "headers" for authentication instead.`
+          );
         }
 
         mcpServers[name] = entry;

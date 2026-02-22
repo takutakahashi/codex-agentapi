@@ -95,6 +95,62 @@ describe('MCPService', () => {
       expect(simple.env).toBeUndefined();
     });
 
+    it('should convert HTTP type MCP server', () => {
+      const result = service.prepareMCPEnvironment({
+        mcpServers: {
+          github: {
+            type: 'http',
+            url: 'https://api.githubcopilot.com/mcp/',
+            headers: { Authorization: 'Bearer token123' },
+          },
+        },
+      });
+
+      expect(result).toEqual({
+        mcp_servers: {
+          github: {
+            type: 'http',
+            url: 'https://api.githubcopilot.com/mcp/',
+            headers: { Authorization: 'Bearer token123' },
+          },
+        },
+      });
+    });
+
+    it('should omit env for HTTP type MCP server (env not supported for streamable_http)', () => {
+      const result = service.prepareMCPEnvironment({
+        mcpServers: {
+          github: {
+            type: 'http',
+            url: 'https://api.githubcopilot.com/mcp/',
+            env: { GITHUB_TOKEN: 'secret' },
+          },
+        },
+      });
+
+      const servers = (result as Record<string, unknown>).mcp_servers as Record<string, unknown>;
+      const github = servers.github as Record<string, unknown>;
+      expect(github.env).toBeUndefined();
+      expect(github.type).toBe('http');
+      expect(github.url).toBe('https://api.githubcopilot.com/mcp/');
+    });
+
+    it('should convert HTTP server detected by url without command', () => {
+      const result = service.prepareMCPEnvironment({
+        mcpServers: {
+          myHttpServer: {
+            url: 'https://example.com/mcp',
+          },
+        },
+      });
+
+      const servers = (result as Record<string, unknown>).mcp_servers as Record<string, unknown>;
+      const server = servers.myHttpServer as Record<string, unknown>;
+      expect(server.type).toBe('http');
+      expect(server.url).toBe('https://example.com/mcp');
+      expect(server.env).toBeUndefined();
+    });
+
     it('should convert multiple MCP servers', () => {
       const result = service.prepareMCPEnvironment({
         mcpServers: {
