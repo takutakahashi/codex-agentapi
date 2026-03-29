@@ -37,12 +37,12 @@ describe('loadConfig', () => {
     delete process.env.CODEX_APPROVAL_POLICY;
   });
 
-  it('should leave sandboxMode and approvalPolicy undefined when env vars are not set', () => {
+  it('should default sandboxMode to danger-full-access when env var is not set', () => {
     delete process.env.CODEX_SANDBOX_MODE;
     delete process.env.CODEX_APPROVAL_POLICY;
     const config = loadConfig();
 
-    expect(config.agent.sandboxMode).toBeUndefined();
+    expect(config.agent.sandboxMode).toBe('danger-full-access');
     expect(config.agent.approvalPolicy).toBeUndefined();
   });
 });
